@@ -1,0 +1,54 @@
+version: "3"
+services:
+  redis:
+    build:
+      context: "./redis"
+      dockerfile: "Dockerfile"
+    ports:
+      - "6379:6379"
+    networks:
+      - "graphion"
+    volumes:
+      - "redis_data:/data"
+  db:
+    build:
+      context: "./postgresql"
+      dockerfile: "Dockerfile"
+    ports:
+      - "5432:5432"
+    restart: "always"
+    environment:
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+      POSTGRES_DB: "${DB_DATABASE}"
+    networks:
+      - "graphion"
+    volumes:
+      - "db_data:/var/lib/postgresql/data/"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  # scraper:
+  #   build:
+  #     context: "."
+  #     dockerfile: "Dockerfile"
+  #   image: "scraper"
+  #   networks:
+  #     - "scraper"
+  #   security_opt:
+  #     - "seccomp=playwright/seccomp_profile.json"
+  #   depends_on:
+  #     - "redis"
+
+networks:
+  graphion:
+    name: "graphion"
+    driver: "bridge"
+
+volumes:
+  redis_data:
+    name: "redis_data"
+  db_data:
+    name: "db_data"
+
