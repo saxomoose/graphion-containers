@@ -1,9 +1,3 @@
--- Drop schema.
-
-DROP SCHEMA IF EXISTS cbe CASCADE;
-
--- Create schema.
-
+DROP SCHEMA IF EXISTS eid CASCADE;
 CREATE SCHEMA eid;
-
-ALTER SCHEMA eid OWNER TO postgres;
+ALTER SCHEMA eid OWNER TO dba;
