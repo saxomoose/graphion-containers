@@ -4,6 +4,7 @@ services:
     build:
       context: "./redis"
       dockerfile: "Dockerfile"
+    image: "graphion-redis"
     ports:
       - "6379:6379"
     restart: "always"
@@ -15,6 +16,7 @@ services:
     build:
       context: "./postgresql"
       dockerfile: "Dockerfile"
+    image: "graphion-db"
     ports:
       - "5432:5432"
     restart: "always"
@@ -31,14 +33,15 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-  reverseproxy:
-    build:
-      context: "./nginx"
-      dockerfile: "Dockerfile"
-    ports:
-      - "8080:8080"
-    networks:
-      - "graphion"
+  # reverseproxy:
+  #   build:
+  #     context: "./nginx"
+  #     dockerfile: "Dockerfile"
+  #   image: "graphion-reverseproxy"
+  #   network_mode: "host"
+  #   ports:
+  #     - "8443:8443"
+  #   restart: "always"
   # scraper:
   #   build:
   #     context: "."
@@ -50,6 +53,17 @@ services:
   #     - "seccomp=playwright/seccomp_profile.json"
   #   depends_on:
   #     - "redis"
+  # eid:
+  #   build:
+  #     context: "../eid"
+  #     dockerfile: "Dockerfile"
+  #   image: "graphion-eid"
+  #   ports:
+  #     - "5000:5000"
+  #   networks:
+  #     - "graphion"
+  #   depends_on:
+  #     - "db"
 
 networks:
   graphion:
