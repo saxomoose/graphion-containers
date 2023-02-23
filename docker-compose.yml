@@ -5,34 +5,79 @@ services:
       context: "./redis"
       dockerfile: "Dockerfile"
     image: "graphion-redis"
+    networks:
+      - "graphion-network"
     ports:
       - "6379:6379"
-    restart: "always"
-    networks:
-      - "graphion"
     volumes:
-      - "redis_data:/data"
+      - "graphion-redis-volume:/data"
+    restart: "always"
   db:
     build:
       context: "./postgresql"
       dockerfile: "Dockerfile"
     image: "graphion-db"
-    ports:
-      - "5432:5432"
-    restart: "always"
     environment:
       POSTGRES_DB: "${POSTGRES_DB}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
       POSTGRES_UNPRIV_USER: "${POSTGRES_UNPRIV_USER}"
     networks:
-      - "graphion"
+      - "graphion-network"
+    ports:
+      - "5432:5432"
     volumes:
-      - "db_data:/var/lib/postgresql/data/"
+      - "graphion-db-volume:/var/lib/postgresql/data/"
+    restart: "always"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: "5s"
+      timeout: "5s"
       retries: 5
+  minio-server:
+    build:
+      context: "./minio-server"
+      dockerfile: "Dockerfile"
+    image: "graphion-minio-server"
+    environment:
+      MINIO_ROOT_USER: "${MINIO_ROOT_USER}"
+      MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD}"
+      MINIO_CONFIG_ENV_FILE: "/etc/minio-server.conf"
+    networks:
+      - "graphion-network"
+    ports:
+     - "9000:9000"
+     - "9001:9001"
+    volumes:
+      - "graphion-minio-volume:/data"
+    restart: "always"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: "5s"
+      timeout: "5s"
+      retries: 5
+  minio-client:
+    depends_on:
+      - "minio-server"
+    build:
+      context: "./minio-client"
+      dockerfile: Dockerfile
+    image: "graphion-minio-client"
+    environment:
+      MINIO_ROOT_USER: "${MINIO_ROOT_USER}"
+      MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD}"
+      MINIO_UNPRIV_USER: "${MINIO_UNPRIV_USER}"
+      MINIO_UNPRIV_PASSWORD: "${MINIO_UNPRIV_PASSWORD}"
+    networks:
+      - "graphion-network"
+  mailhog:
+    image: "mailhog/mailhog:latest"
+    networks:
+      - graphion-network
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    restart: "always"
+
   # reverseproxy:
   #   build:
   #     context: "./nginx"
@@ -48,7 +93,7 @@ services:
   #     dockerfile: "Dockerfile"
   #   image: "scraper"
   #   networks:
-  #     - "scraper"
+  #     - "graphion-network"
   #   security_opt:
   #     - "seccomp=playwright/seccomp_profile.json"
   #   depends_on:
@@ -58,21 +103,22 @@ services:
   #     context: "../eid"
   #     dockerfile: "Dockerfile"
   #   image: "graphion-eid"
+  #   networks:
+  #     - "graphion-network"
   #   ports:
   #     - "5000:5000"
-  #   networks:
-  #     - "graphion"
   #   depends_on:
   #     - "db"
 
 networks:
-  graphion:
-    name: "graphion"
+  graphion-network:
+    name: "graphion-network"
     driver: "bridge"
 
 volumes:
-  redis_data:
-    name: "redis_data"
-  db_data:
-    name: "db_data"
-
+  graphion-redis-volume:
+    name: "graphion-redis-volume"
+  graphion-db-volume:
+    name: "graphion-db-volume"
+  graphion-minio-volume:
+    name: "graphion-minio-volume"

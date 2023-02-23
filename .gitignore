@@ -1,4 +1,4 @@
 .env
 .vscode
-redis/users.acl
 nginx/certs/
+redis/users.acl
