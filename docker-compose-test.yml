@@ -1,21 +1,16 @@
+# All host ports incremented by 10.
 version: "3"
 services:
-  redis:
-    build:
-      context: "./redis"
-      dockerfile: "Dockerfile"
+  redis-test:
     image: "graphion-redis"
     networks:
-      - "graphion-network"
+      - "graphion-network-test"
     ports:
-      - "6379:6379"
+      - "6389:6379"
     volumes:
-      - "graphion-redis-volume:/data"
+      - "graphion-redis-test-volume:/data"
     restart: "always"
-  db:
-    build:
-      context: "./postgresql"
-      dockerfile: "Dockerfile"
+  db-test:
     image: "graphion-db"
     environment:
       POSTGRES_DB: "${POSTGRES_DB}"
@@ -23,61 +18,58 @@ services:
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
       POSTGRES_UNPRIV_USER: "${POSTGRES_UNPRIV_USER}"
     networks:
-      - "graphion-network"
+      - "graphion-network-test"
     ports:
-      - "5432:5432"
+      - "5442:5432"
     volumes:
-      - "graphion-db-volume:/var/lib/postgresql/data/"
+      - "graphion-db-test-volume:/var/lib/postgresql/data/"
     restart: "always"
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: "5s"
       timeout: "5s"
       retries: 5
-  minio-server:
-    build:
-      context: "./minio-server"
-      dockerfile: "Dockerfile"
+  minio-server-test:
     image: "graphion-minio-server"
     environment:
       MINIO_ROOT_USER: "${MINIO_ROOT_USER}"
       MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD}"
       MINIO_CONFIG_ENV_FILE: "/etc/minio-server.conf"
     networks:
-      - "graphion-network"
+      - "graphion-network-test"
     ports:
-     - "9000:9000"
-     - "9001:9001"
+     - "9010:9000"
+     - "9011:9001"
     volumes:
-      - "graphion-minio-volume:/data"
+      - "graphion-minio-test-volume:/data"
     restart: "always"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: "5s"
       timeout: "5s"
       retries: 5
-  minio-client:
+  minio-client-test:
     depends_on:
-      - "minio-server"
+      - "minio-server-test"
     build:
       context: "./minio-client"
       dockerfile: Dockerfile
-    image: "graphion-minio-client"
+    image: "graphion-minio-client-test"
     environment:
-      MINIO_SERVER: "${MINIO_SERVER}"
+      MINIO_SERVER: "${MINIO_SERVER_TEST}"
       MINIO_ROOT_USER: "${MINIO_ROOT_USER}"
       MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD}"
       MINIO_UNPRIV_USER: "${MINIO_UNPRIV_USER}"
       MINIO_UNPRIV_PASSWORD: "${MINIO_UNPRIV_PASSWORD}"
     networks:
-      - "graphion-network"
-  mailhog:
+      - "graphion-network-test"
+  mailhog-test:
     image: "mailhog/mailhog:latest"
     networks:
-      - graphion-network
+      - graphion-network-test
     ports:
-      - "1025:1025"
-      - "8025:8025"
+      - "1035:1025"
+      - "8035:8025"
     restart: "always"
 
   # reverseproxy:
@@ -95,7 +87,7 @@ services:
   #     dockerfile: "Dockerfile"
   #   image: "scraper"
   #   networks:
-  #     - "graphion-network"
+  #     - "graphion-network-test"
   #   security_opt:
   #     - "seccomp=playwright/seccomp_profile.json"
   #   depends_on:
@@ -106,21 +98,21 @@ services:
   #     dockerfile: "Dockerfile"
   #   image: "graphion-eid"
   #   networks:
-  #     - "graphion-network"
+  #     - "graphion-network-test"
   #   ports:
   #     - "5000:5000"
   #   depends_on:
   #     - "db"
 
 networks:
-  graphion-network:
-    name: "graphion-network"
+  graphion-network-test:
+    name: "graphion-network-test"
     driver: "bridge"
 
 volumes:
-  graphion-redis-volume:
-    name: "graphion-redis-volume"
-  graphion-db-volume:
-    name: "graphion-db-volume"
-  graphion-minio-volume:
-    name: "graphion-minio-volume"
+  graphion-redis-test-volume:
+    name: "graphion-redis-test-volume"
+  graphion-db-test-volume:
+    name: "graphion-db-test-volume"
+  graphion-minio-test-volume:
+    name: "graphion-minio-test-volume"
