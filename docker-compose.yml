@@ -90,16 +90,16 @@ services:
   #     - "8443:8443"
   #   restart: "always"
   # scraper:
+  #   depends_on:
+  #     - "redis"
   #   build:
-  #     context: "."
+  #     context: "../scraper"
   #     dockerfile: "Dockerfile"
-  #   image: "scraper"
+  #   image: "graphion-scraper"
   #   networks:
   #     - "graphion-network"
   #   security_opt:
   #     - "seccomp=playwright/seccomp_profile.json"
-  #   depends_on:
-  #     - "redis"
   # eid:
   #   build:
   #     context: "../eid"
