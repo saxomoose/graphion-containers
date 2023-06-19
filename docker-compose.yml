@@ -72,9 +72,12 @@ services:
       MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD}"
       MINIO_UNPRIV_USER: "${MINIO_UNPRIV_USER}"
       MINIO_UNPRIV_PASSWORD: "${MINIO_UNPRIV_PASSWORD}"
-      MINIO_BUCKET: "${MINIO_BUCKET}"
+      MINIO_ADMIN_BUCKET: "${MINIO_ADMIN_BUCKET}"
+      MINIO_TEST_BUCKET: "${MINIO_TEST_BUCKET}"
     networks:
       - "graphion-network"
+    stop_grace_period: "1s"
+    restart: "always"
   mailhog:
     image: "mailhog/mailhog:latest"
     networks:

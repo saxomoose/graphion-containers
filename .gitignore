@@ -1,4 +1,5 @@
 .env
 .vscode
+minio-client/scripts/certs
 nginx/certs/
 redis/users.acl
